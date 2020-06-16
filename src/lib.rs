@@ -1,6 +1,7 @@
 /// What is Left:
 /// InterEntity Communication
 use std::collections::HashMap;
+use rand::Rng;
 ///Usage:
 /// create entity with create_entity.
 /// ```
@@ -51,6 +52,12 @@ macro_rules! create_entity {
             elements: HashMap<ID,Entity<Message>>
         }
         impl<Message> EntityManager<Message>{
+            fn new()->Self{
+                EntityManager{
+                    elements:HashMap::new()
+
+                }
+            }
             fn get_entity(&self,id:ID)->Option<&Entity<Message>>{
                 self.elements.get(&id)
             }
@@ -64,6 +71,22 @@ macro_rules! create_entity {
                 }
                 
             }),*
+            fn get_id(&self)->ID{
+                let mut rng = rand::thread_rng();
+                let val = rng.gen();
+                if self.elements.contains_key(&val){
+                    return self.get_id();
+                }else{
+                    return val
+                }
+
+            }
+            pub fn new_entity(&mut self,entity:Entity<Message>)->ID{
+                let id = self.get_id();
+                self.elements.insert(id,entity);
+                return id;
+                 
+            }
         }
     }
 }
@@ -83,6 +106,14 @@ mod test{
         let mut e = Entity::<u32>::new(||{0},vec![|e,v|{e.a=1}]);
         e.process();
         assert_eq!(e.data.a(),1);
+
+    }
+    #[test]
+    fn entity_mgr(){
+        let mut mgr = EntityManager::<u32>::new();
+        let e = Entity::<u32>::new(||{0},vec![|e,v|{e.a=1}]);
+        mgr.new_entity(e);
+
 
     }
 }
