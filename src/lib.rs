@@ -10,25 +10,30 @@ use rand::Rng;
 /// e.process();
 /// ```
 macro_rules! create_entity {
-    ($name:ident,$($element: ident: $ty: ty),*) => {
+    ($($element: ident: $ty: ty),*) => {
     
-        struct $name{
+        struct Data{
             $($element: $ty),*
         }
-        impl $name{
+        impl Data{
             pub fn new($($element:fn()->$ty),*)->Self{
-                Self{
-                    $($element: $element()),*
+                return Self{
+                    $(
+                        $element: $element()
+                    ),*
                 }
             }
-            $(pub fn $element (&self) ->$ty{self.$element.clone()}),*
+            $(pub fn $element (&self) ->$ty {
+                self.$element.clone()
+            }
+            )*
         }
         struct BehaviorComponent{
-            search: fn(&$name,&EntityManager),
-            update: fn(&mut $name),
+            search: fn(&Data,&EntityManager),
+            update: fn(&mut Data),
         }
         impl BehaviorComponent{
-            fn new(search: fn(&$name,&EntityManager), update: fn(&mut $name))->Self{
+            fn new(search: fn(&Data,&EntityManager), update: fn(&mut Data))->Self{
                 Self{
                     search:search,
                     update:update
@@ -42,13 +47,13 @@ macro_rules! create_entity {
             Message(ID)
         }
         struct Entity{
-            data: $name,
+            data: Data,
             behavior: Vec<BehaviorComponent>,
         }
         impl Entity{
             pub fn new($($element:fn()->$ty),*,behavior:Vec<BehaviorComponent>)->Self{
                 Self{
-                    data:$name::new($($element).*),
+                    data:Data::new($($element),*),
                     behavior: behavior
                 }
             }
@@ -67,12 +72,14 @@ macro_rules! create_entity {
             }
         }
         struct EntityManager{
-            elements: HashMap<ID,Entity>
+            elements: std::collections::HashMap<ID,Entity>
         }
+            use rand::prelude::*;
+            use rand::Rng;
         impl EntityManager{
             fn new()->Self{
                 EntityManager{
-                    elements:HashMap::new()
+                    elements:std::collections::HashMap::new()
 
                 }
             }
@@ -88,7 +95,7 @@ macro_rules! create_entity {
                     None
                 }
                 
-            }),*
+            })*
             fn get_id(&self)->ID{
                 let mut rng = rand::thread_rng();
                 let val = rng.gen();
@@ -119,29 +126,30 @@ macro_rules! create_entity {
     }
 }
 mod test{
-    create_entity!(data,a:u32);
+    macro_rules! create_entity_t {
+        ($($element: ident: $ty: ty),*) => {
+        
+        struct Data{
+            $($element: $ty),*
+        }
+        impl Data{
+            pub fn new($($element:fn()->$ty),*)->Self{
+                return Self{
+                    $(
+                        $element: $element()
+                    ),*
+                }
+            }
+            $(pub fn $element (&self) ->$ty {
+                self.$element.clone()
+            }
+            )*
+        }
+        }
+    }
+    create_entity!(a:u32);
+    mod t2{
+      create_entity!(a:u32,b:f32);
+    }
     use super::*;
-  //  fn zero()->u32{
-  //      0
-  //  }
-  //  #[test]
-  //  fn new(){
-  //      let e = data::new(||{0});
-  //      assert_eq!(e.a(),0);
-  //  }
-  //  //#[test]
-  //  //fn new_entity(){
-  //  //    let mut e = Entity::<u32>::new(||{0},vec![|e,v|{e.a=1}]);
-  //  //    e.process();
-  //  //    assert_eq!(e.data.a(),1);
-
-  //  //}
-  //  #[test]
-  //  fn entity_mgr(){
-  //      let mut mgr = EntityManager::<u32>::new();
-  //      let e = Entity::<u32>::new(||{0},vec![|e,v|{e.a=1}]);
-  //      mgr.new_entity(e);
-
-
-  //  }
 }
